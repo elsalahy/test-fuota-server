@@ -1,29 +1,9 @@
-/** Copyright © 2021 The Things Industries B.V.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 /**
- * @file server.js
- *
- * @copyright Copyright (c) 2021 The Things Industries B.V.
- *
- */
-
-/**
- * ------------- WARNING and Disclaimer -------------
+ * ------------- DISCLAIMER & WARNING and  -------------
  * This FUOTA test server should only be used for prototyping and testing.
- * This server should not be used in production and TTI is not responsible for the usage of this demo server in deployed environments.
+ * This server should not be used in production.
+ * Again, Please use this server for testing and prototyping only.
+ * Please contact The Things Industries for scalable deployments.
  */
 
 const mqtt = require('mqtt');
@@ -53,14 +33,15 @@ var options = {
 }
 
 // Device IDs and EUIs config
+var TENANT_ID = ''; //For The Things Stack Cloud
 var GATEWAY_ID= '';
-var TENANT_NAME = ''; //For TTS Cloud
 
-// Multicast group details config
+// Multicast group details config, see https://www.thethingsindustries.com/docs/devices/multicast/
 var MULTICAST_APP_ID= '';
 var MULTICAST_DEV_ID= '';
 
-// Devices EUIs config , Example: `FA23A01E61AE4F65`,'FA23A01E61AE4F68'
+// Devices EUIs config with no spaces, Example: `FA23A01E61AE4F65`
+// These are the Devices that will open a class C session and receive the multicast fragments
 const devices = [
     ''
 ];
@@ -213,8 +194,8 @@ client.on('message', async function (topic, message) {
         }
         if (deviceMap[m.end_device_ids.dev_eui].msgWaiting) {
             let msgWaiting = deviceMap[m.end_device_ids.dev_eui].msgWaiting;
-            console.log("publishing as",m.end_device_ids.application_ids.application_id+'@'+TENANT_NAME,m.end_device_ids.device_id);
-            client.publish(`v3/${m.end_device_ids.application_ids.application_id+'@'+TENANT_NAME}/devices/${m.end_device_ids.device_id}/down/push`, Buffer.from(JSON.stringify(msgWaiting), 'utf8'));
+            console.log("publishing as",m.end_device_ids.application_ids.application_id+'@'+TENANT_ID,m.end_device_ids.device_id);
+            client.publish(`v3/${m.end_device_ids.application_ids.application_id+'@'+TENANT_ID}/devices/${m.end_device_ids.device_id}/down/push`, Buffer.from(JSON.stringify(msgWaiting), 'utf8'));
             deviceMap[m.end_device_ids.dev_eui].msgWaiting = null;
         }
     });
@@ -374,9 +355,9 @@ client.on('message', async function (topic, message) {
             }]
             };
 
-            client.publish(`v3/${mcDetails.application_id+'@'+TENANT_NAME}/devices/${mcDetails.device_id}/down/push`, Buffer.from(JSON.stringify(msg), 'utf8'));
+            client.publish(`v3/${mcDetails.application_id+'@'+TENANT_ID}/devices/${mcDetails.device_id}/down/push`, Buffer.from(JSON.stringify(msg), 'utf8'));
 
-            console.log('Sent packet', ++counter, mcDetails.application_id+'@'+TENANT_NAME,mcDetails.device_id);
+            console.log('Sent packet', ++counter, mcDetails.application_id+'@'+TENANT_ID,mcDetails.device_id);
 
             await sleep(1200); // packet on SF12 is 2100 ms. so this should just work
         }
