@@ -17,19 +17,19 @@ const rp = require('request-promise');
 // MQTT config, see https://www.thethingsindustries.com/docs/integrations/mqtt/
 var HOST = '';
 var APP_ID = '';
-var PORT = 1883 ; // 1883 or 8883 for TLS
 var API_KEY = '';
+var PORT = 1883 ; // 1883 or 8883 for TLS
 // var KEY = fs.readFileSync(path.join(__dirname, '/key.pem')); // Uncomment if you are using TLS
 // var CERT = fs.readFileSync(path.join(__dirname, '/cert.pem')); //Uncomment if you are using TLS
 var options = {
+    host: HOST,
     username: APP_ID,
     password: API_KEY,
     port: PORT,
-    host: HOST,
-    //key: KEY,
-    //cert: CERT,
+    //key: KEY, // Uncomment if you are using TLS
+    //cert: CERT, // Uncomment if you are using TLS
     rejectUnauthorized: false,
-    protocol: 'mqtts'
+    protocol: 'mqtt' //mqtts for TLS
 }
 
 // Device IDs and EUIs config

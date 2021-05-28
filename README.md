@@ -63,7 +63,7 @@ Create a multicast device
 // MQTT config, see https://www.thethingsindustries.com/docs/integrations/mqtt/
 var HOST = 'eu1.cloud.thethings.industries';
 var APP_ID = 'fota@tti';
-var API_KEY = 'NNSXS.G65HNVQYRDTSWH2RQSMTUGEZYUCD6DFPQGZYQOA.K7OF44K2QB2SP3RPWH3GD7HV7AFTEMRAJVV5QPU3JIYRKVZL2GSA';
+var API_KEY = 'NNSXS.5GVFU6HQJJZ5JD7QUA4UOHUMR6T37MEY5ZQDUOA.TMSDZRZMNOQHD6VIJMJ3R276EY43XBP4W5TQ6PCMDOEU6FFZ46YA';
 var PORT = 1883 ; // 1883 or 8883 for TLS
 // var KEY = fs.readFileSync(path.join(__dirname, '/key.pem')); // Uncomment if you are using TLS
 // var CERT = fs.readFileSync(path.join(__dirname, '/cert.pem')); //Uncomment if you are using TLS
@@ -72,10 +72,10 @@ var options = {
     username: APP_ID,
     password: API_KEY,
     port: PORT,
-    //key: KEY,
-    //cert: CERT,
+    //key: KEY, // Uncomment if you are using TLS
+    //cert: CERT, // Uncomment if you are using TLS
     rejectUnauthorized: false,
-    protocol: 'mqtts'
+    protocol: 'mqtt' //mqtts for TLS
 }
 
 // Device IDs and EUIs config
