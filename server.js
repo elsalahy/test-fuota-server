@@ -33,7 +33,7 @@ var options = {
 }
 
 // Device IDs and EUIs config
-var TENANT_ID = ''; //For The Things Stack Cloud
+var TENANT_ID = ''; // Tenant_ID On Things Stack Cloud
 var GATEWAY_ID= '';
 
 // Multicast group details config, see https://www.thethingsindustries.com/docs/devices/multicast/
@@ -54,8 +54,10 @@ var extra_info = 0; // Set to 1 to get more debug info
 
 const client = mqtt.connect(options);
 const PACKET_FILE = process.argv[2];
+const PACKET_FILE_CRC32_CHECKSUM = process.argv[3];
 const DATARATE = process.env.LORA_DR || 5; //@user, please adjust here
-if (!PACKET_FILE) throw 'Syntax: PACKET_FILE Not Provided';
+if (!PACKET_FILE) throw 'Input error: PACKET_FILE was not provided, please provide a fragmented binary file';
+if (!PACKET_FILE_CRC32_CHECKSUM) throw 'Input error: PACKET_FILE_CRC32_CHECKSUM was not provided, please provide the binary file CRC32 checksum';
 const mcDetails = {
     application_id: MULTICAST_APP_ID,
     device_id: MULTICAST_DEV_ID,
@@ -113,7 +115,7 @@ client.on('message', async function (topic, message) {
                     }]
                 };
 
-                deviceMap[m.end_device_ids.dev_eui].msgWaiting = responseMessage;
+                // deviceMap[m.end_device_ids.dev_eui].msgWaiting = responseMessage; //Suppress response if the device requests DeviceTimeReq MAC command.
 
                 deviceMap[m.end_device_ids.dev_eui].clockSynced = true;
                 deviceMap[m.end_device_ids.dev_eui].applicationID = m.end_device_ids.application_ids.application_id;
@@ -129,7 +131,7 @@ client.on('message', async function (topic, message) {
                 console.warn('Could not handle clock sync request', body);
             }
         }
-        if (m.uplink_message.f_port === 200 /* mc group cmnds */) {
+        if (m.uplink_message.f_port === 200 /* mc group commands */) {
             let body = Buffer.from(m.uplink_message.frm_payload, 'base64');
             if (body[0] === 0x2) { // McGroupSetupAns
                 if (body[1] === 0x0) {
@@ -163,7 +165,7 @@ client.on('message', async function (topic, message) {
                 }
             }
             else {
-                console.warn('Could not handle Mc Group command', body);
+                console.warn('Could not handle multicast command', body);
             }
         }
         if (m.uplink_message.f_port === 201 /* frag session */) {
@@ -182,14 +184,24 @@ client.on('message', async function (topic, message) {
                 }
             }
             else if (body[0] === 0x5) { // DATA_BLOCK_AUTH_REQ
-                let hash = '';
-                for (let ix = 5; ix > 1; ix--) {
-                    hash += body.slice(ix, ix+1).toString('hex');
+                let checksum = '';
+                for (let ix = 5; ix >= 1; ix--) {
+                    checksum += body.slice(ix, ix+1).toString('hex');
                 }
-                console.log('Received DATA_BLOCK_AUTH_REQ', m.end_device_ids.dev_eui, hash);
+                console.log('Received DATA_BLOCK_AUTH_REQ', m.end_device_ids.dev_eui, checksum.toUpperCase());
+                if (checksum.toUpperCase() === (PACKET_FILE_CRC32_CHECKSUM.toString('hex')).toUpperCase())
+                {
+                    console.log('Received CRC32 checksum correctly matches input checksum', checksum.toUpperCase());
+                    console.log('Successful FUOTA on device', m.end_device_ids.dev_eui);
+                }
+                else {
+                    console.log('Received CRC32 checksum does not match input checksum, unsuccessful FUOTA on device', m.end_device_ids.dev_eui);
+                    console.log('Input checksum', (PACKET_FILE_CRC32_CHECKSUM.toString('hex')).toUpperCase());
+                    console.log('Device checksum', checksum.toUpperCase());
+                }
             }
             else {
-                console.warn('Could not handle Mc Group command', body);
+                console.warn('Could not handle fragmentation command', body);
             }
         }
         if (deviceMap[m.end_device_ids.dev_eui].msgWaiting) {
